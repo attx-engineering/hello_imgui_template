@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.12)
-project(helloworld_with_helloimgui)
+project(hello_ms_gui)
 set(CMAKE_CXX_STANDARD 17)
+
+set(FETCHCONTENT_FULLY_DISCONNECTED ON)
 
 # Build hello_imgui
 # =================
@@ -38,13 +40,33 @@ endif()
 # Now you can build your app with
 #     mkdir build && cd build && cmake .. && cmake --build .
 
+# Add modelspace subdirectory
+add_subdirectory(modelspace)
+
+# Add MS GUI app resources
+file(GLOB _App_CommonResources CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/modelspace/data/app/*")
+set(APP_SRC ${PROJECT_SOURCE_DIR}/modelspace/cpp/app/application/source/application.cpp 
+            ${PROJECT_SOURCE_DIR}/modelspace/cpp/app/application/source/widgets.cpp
+            ${PROJECT_SOURCE_DIR}/modelspace/cpp/app/application/source/drawing.cpp
+            ${PROJECT_SOURCE_DIR}/modelspace/cpp/app/application/source/entry_point.cpp 
+            ${PROJECT_SOURCE_DIR}/modelspace/cpp/app/application/source/imgui_extra_keys.h 
+            ${PROJECT_SOURCE_DIR}/modelspace/cpp/app/application/source/config.h.in 
+            ${PROJECT_SOURCE_DIR}/modelspace/cpp/app/application/source/setup.h 
+            ${PROJECT_SOURCE_DIR}/modelspace/cpp/app/application/source/platform.h 
+            ${PROJECT_SOURCE_DIR}/modelspace/cpp/app/application/source/platform_win32.cpp 
+            ${PROJECT_SOURCE_DIR}/modelspace/cpp/app/application/source/platform_glfw.cpp 
+            ${PROJECT_SOURCE_DIR}/modelspace/cpp/app/application/source/renderer.h 
+            ${PROJECT_SOURCE_DIR}/modelspace/cpp/app/application/source/renderer_dx11.cpp 
+            ${PROJECT_SOURCE_DIR}/modelspace/cpp/app/application/source/renderer_ogl3.cpp)
+
 # By default, we install in a portable way (i.e. assets and executable are in the same folder)
 option(EXAMPLE_INTEGRATION_PORTABLE_INSTALL "Install in a portable way" ON)
 
 
 if (EXAMPLE_INTEGRATION_PORTABLE_INSTALL)
     # portable installation is the easiest way to install the app
-    hello_imgui_add_app(hello_world_ hello_world.main.cpp)
+    # hello_imgui_add_app(hello_world_ hello_world.main.cpp)
+    hello_imgui_add_app(ms_gui ${APP_SRC} ${_App_CommonResources})
 else()
     # Disable HelloImGui default install behavior
     set(HELLOIMGUI_ADD_APP_WITH_INSTALL OFF CACHE BOOL "" FORCE)
