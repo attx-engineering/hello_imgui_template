@@ -13,7 +13,7 @@ endif()
 if (NOT TARGET hello_imgui)
     message(STATUS "Fetching hello_imgui")
     include(FetchContent)
-    FetchContent_Declare(hello_imgui GIT_REPOSITORY https://github.com/pthom/hello_imgui.git GIT_TAG master)
+    FetchContent_Declare(hello_imgui GIT_REPOSITORY https://github.com/attx-engineering/hello_imgui.git GIT_TAG imgui_v1-91_docking)
     FetchContent_MakeAvailable(hello_imgui)
 endif()
 
