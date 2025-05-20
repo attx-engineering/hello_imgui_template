@@ -4,9 +4,9 @@ set(CMAKE_CXX_STANDARD 17)
 
 # Build hello_imgui
 # =================
-# 1/  Option 1: if you added hello_imgui as a subfolder, you can add it to your project with:
-if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/external/hello_imgui)
-    add_subdirectory(external/hello_imgui)
+# 1/  Option 1: if you added hello_imgui as ak subfolder, you can add it to your project with:
+if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/hello_imgui)
+    add_subdirectory(hello_imgui)
 endif()
 
 # 2/  Option 2: simply fetch hello_imgui during the build
@@ -37,6 +37,10 @@ endif()
 
 # Now you can build your app with
 #     mkdir build && cd build && cmake .. && cmake --build .
+
+# Some dependencies
+add_subdirectory(${PROJECT_SOURCE_DIR}/json)
+include_directories(${PROJECT_SOURCE_DIR}/json/include)
 
 # By default, we install in a portable way (i.e. assets and executable are in the same folder)
 option(EXAMPLE_INTEGRATION_PORTABLE_INSTALL "Install in a portable way" ON)

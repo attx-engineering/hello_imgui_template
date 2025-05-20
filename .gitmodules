@@ -1,0 +1,9 @@
+[submodule "ms-gui-app"]
+	path = ms-gui-app
+	url = git@github.com:attx-engineering/ms-gui-app.git
+[submodule "json"]
+	path = json
+	url = git@github.com:attx-engineering/json.git
+[submodule "hello_imgui"]
+	path = hello_imgui
+	url = git@github.com:attx-engineering/hello_imgui.git
