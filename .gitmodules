@@ -7,3 +7,13 @@
 [submodule "hello_imgui"]
 	path = hello_imgui
 	url = git@github.com:attx-engineering/hello_imgui.git
+[submodule "imgui-node-editor"]
+	path = imgui-node-editor
+	url = git@github.com:attx-engineering/imgui-node-editor.git
+[submodule "clockwerk"]
+	path = clockwerk
+	url = git@github.com:attx-engineering/clockwerk.git
+[submodule "modelspace-slim"]
+	path = modelspace
+	url = git@github.com:attx-engineering/modelspace.git
+	branch = gui-deps-for-submodule
