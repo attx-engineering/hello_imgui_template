@@ -57,6 +57,10 @@ else()
         add_definitions(-DLICENSE_ROOT_DIR="${CMAKE_SOURCE_DIR}/license")
     endif()
 endif()
+if(CONFIG_RELEASE)
+else()
+  add_definitions(-DSIM_NO_CHECK_LICENSE)
+endif()
 
 # Some dependencies
 add_subdirectory(${PROJECT_SOURCE_DIR}/json)
