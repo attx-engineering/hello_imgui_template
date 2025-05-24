@@ -38,16 +38,6 @@ endif()
 # Now you can build your app with
 #     mkdir build && cd build && cmake .. && cmake --build .
 
-# Some dependencies
-add_subdirectory(${PROJECT_SOURCE_DIR}/json)
-include_directories(${PROJECT_SOURCE_DIR}/json/include)
-add_subdirectory(${PROJECT_SOURCE_DIR}/imgui-node-editor)
-include_directories(${PROJECT_SOURCE_DIR}/modelspace/cpp/src)
-include_directories(${PROJECT_SOURCE_DIR}/ms-gui-app)
-# This call to the clockwerk submodule cmake to build out our core utils
-add_subdirectory(clockwerk)
-include_directories(clockwerk/src)
-
 # Export our project dir for access in C++
 get_directory_property(hasParent PARENT_DIRECTORY)
 if(hasParent)
@@ -67,6 +57,29 @@ else()
         add_definitions(-DLICENSE_ROOT_DIR="${CMAKE_SOURCE_DIR}/license")
     endif()
 endif()
+
+# Some dependencies
+add_subdirectory(${PROJECT_SOURCE_DIR}/json)
+include_directories(${PROJECT_SOURCE_DIR}/json/include)
+add_subdirectory(${PROJECT_SOURCE_DIR}/imgui-node-editor)
+include_directories(${PROJECT_SOURCE_DIR}/modelspace/cpp/src)
+include_directories(${PROJECT_SOURCE_DIR}/ms-gui-app)
+include_directories(${PROJECT_SOURCE_DIR}/assets)
+# add_subdirectory(${PROJECT_SOURCE_DIR}/ms-gui-app)
+include_directories(${PROJECT_SOURCE_DIR}/hello_imgui/external/imgui)
+include_directories(${PROJECT_SOURCE_DIR}/clockwerk/src)
+# This call to the clockwerk submodule cmake to build out our core utils
+add_subdirectory(clockwerk)
+include_directories(clockwerk/src)
+
+# Add the slimmed-down modelspace library
+add_subdirectory(${PROJECT_SOURCE_DIR}/modelspace/cpp)
+include_directories(${PROJECT_SOURCE_DIR}/modelspace/cpp/include)
+
+# Find our packages
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/imgui-node-editor/misc/cmake-modules)
+find_package(stb_image REQUIRED)
+find_package(ScopeGuard REQUIRED)
 
 # Add our app resources
 file(GLOB _App_CommonResources CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/ms-gui-app/data/*")
@@ -89,7 +102,15 @@ set(APP_SRC ${PROJECT_SOURCE_DIR}/ms-gui-app/app/application/source/application.
 
 # Append all the features developed in the app directory
 file(GLOB APP_CUSTOM_SRC ${PROJECT_SOURCE_DIR}/ms-gui-app/app/*.cpp)
-list(APPEND APP_SRC ${APP_CUSTOM_SRC})
+file(GLOB APP_CONFIG_SRC ${PROJECT_SOURCE_DIR}/ms-gui-app/configuration/*.cpp)
+
+# Also add some modelspace source files
+file(GLOB APP_MODELSPACE_SRC ${PROJECT_SOURCE_DIR}/modelspace/cpp/src/*.cpp)
+
+# And also local assets
+file(GLOB APP_ASSETS_SRC ${PROJECT_SOURCE_DIR}/assets/*.cpp)
+
+list(APPEND APP_SRC ${APP_CUSTOM_SRC} ${APP_CONFIG_SRC} ${APP_MODELSPACE_SRC} ${APP_ASSETS_SRC})
 
 # Add an application executable from our sources
 hello_imgui_add_app(ms-gui ${APP_SRC} ${_App_CommonResources})
@@ -144,14 +165,20 @@ target_include_directories(ms-gui PUBLIC ${PROJECT_SOURCE_DIR}/ms-gui-app/app/ap
 target_include_directories(ms-gui PUBLIC ${PROJECT_SOURCE_DIR}/ms-gui-app/app/)
 target_include_directories(ms-gui PUBLIC ${PROJECT_SOURCE_DIR}/ms-gui-app/configuration/)
 target_include_directories(ms-gui PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/source)
-target_include_directories(ms-gui PUBLIC ${PROJECT_SOURCE_DIR}/assets)
+# target_include_directories(ms-gui PUBLIC ${PROJECT_SOURCE_DIR}/assets)
+target_include_directories(ms-gui PUBLIC ${PROJECT_SOURCE_DIR}/hello_imgui/external)
+target_include_directories(ms-gui PUBLIC ${PROJECT_SOURCE_DIR}/hello_imgui/external/stb_image)
+target_include_directories(ms-gui PUBLIC ${PROJECT_SOURCE_DIR}/clockwerk/src)
 
 # Set target compile options
 target_compile_options(ms-gui PRIVATE "-Wno-unused-function")
 
 # And link libraries
-target_link_libraries(ms-gui PUBLIC imgui imgui_node_editor modelspace ms-gui-app)
-target_link_libraries(ms-gui PUBLIC stb_image ScopeGuard)
+target_link_libraries(ms-gui PUBLIC imgui imgui_node_editor modelspace clockwerk)
+target_link_libraries(ms-gui PRIVATE stb_image ScopeGuard)
+
+# Link the slimmed-down modelspace library to the ms-gui target
+target_link_libraries(ms-gui PUBLIC modelspace)
 
 if (WIN32)
     list(APPEND APP_SRC
@@ -221,7 +248,8 @@ target_compile_definitions(ms-gui PRIVATE
     #RENDERER_CONFIG=IMGUI_OGL3
 )
 
-target_include_directories(ms-gui PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/source)
+target_include_directories(ms-gui PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/source)
+# include_directories(${PROJECT_SOURCE_DIR}/build/source)
 
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${APP_SRC})
 
@@ -260,7 +288,11 @@ else()
 endif()
 
 # Print included directories for ms-gui target
-get_target_property(ms_gui_included_dirs ms-gui INTERFACE_INCLUDE_DIRECTORIES)
+get_target_property(ms_gui_included_dirs ms-gui INCLUDE_DIRECTORIES)
 message(STATUS "ms-gui included directories: ${ms_gui_included_dirs}")
+
+# Print source files for ms-gui target
+get_target_property(ms_gui_sources ms-gui SOURCES)
+message(STATUS "ms-gui sources: ${ms_gui_sources}")
 
 message(STATUS "CMAKE_CURRENT_BINARY_DIR: ${CMAKE_CURRENT_BINARY_DIR}")
