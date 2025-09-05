@@ -86,7 +86,7 @@ find_package(stb_image REQUIRED)
 find_package(ScopeGuard REQUIRED)
 
 # Add our app resources
-file(GLOB _App_CommonResources CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/ms-gui-app/data/*")
+file(GLOB _App_CommonResources CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/ms-gui-app/data/*" "${CMAKE_SOURCE_DIR}/ms-gui-app/app/application/data/*")
 set(_AppBinDir ${CMAKE_BINARY_DIR}/bin)
 
 # Build our application -- set initial app source list to be the source files in app/application
@@ -112,7 +112,7 @@ file(GLOB APP_CONFIG_SRC ${PROJECT_SOURCE_DIR}/ms-gui-app/configuration/*.cpp)
 file(GLOB APP_MODELSPACE_SRC ${PROJECT_SOURCE_DIR}/modelspace/cpp/src/*.cpp)
 
 # And also local assets
-file(GLOB APP_ASSETS_SRC ${PROJECT_SOURCE_DIR}/assets/*.cpp)
+file(GLOB APP_ASSETS_SRC ${PROJECT_SOURCE_DIR}/assets/*)
 
 list(APPEND APP_SRC ${APP_CUSTOM_SRC} ${APP_CONFIG_SRC} ${APP_MODELSPACE_SRC} ${APP_ASSETS_SRC})
 
@@ -169,7 +169,7 @@ target_include_directories(ms-gui PUBLIC ${PROJECT_SOURCE_DIR}/ms-gui-app/app/ap
 target_include_directories(ms-gui PUBLIC ${PROJECT_SOURCE_DIR}/ms-gui-app/app/)
 target_include_directories(ms-gui PUBLIC ${PROJECT_SOURCE_DIR}/ms-gui-app/configuration/)
 target_include_directories(ms-gui PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/source)
-# target_include_directories(ms-gui PUBLIC ${PROJECT_SOURCE_DIR}/assets)
+target_include_directories(ms-gui PUBLIC ${PROJECT_SOURCE_DIR}/assets)
 target_include_directories(ms-gui PUBLIC ${PROJECT_SOURCE_DIR}/hello_imgui/external)
 target_include_directories(ms-gui PUBLIC ${PROJECT_SOURCE_DIR}/hello_imgui/external/stb_image)
 target_include_directories(ms-gui PUBLIC ${PROJECT_SOURCE_DIR}/clockwerk/src)
@@ -212,8 +212,16 @@ if (WIN32)
 
     target_link_libraries(ms-gui PRIVATE d3d11.lib d3dcompiler.lib d3dx11)
 else()
-    find_package(OpenGL REQUIRED)
-    find_package(glfw3 3 REQUIRED)
+
+    # Emscripten already ships its own “ports” of OpenGL ES 2/3 and GLFW 
+    if(NOT EMSCRIPTEN)
+        find_package(OpenGL REQUIRED)
+        find_package(glfw3 3 REQUIRED)
+    endif()
+    if(EMSCRIPTEN)
+        set(HAVE_GLFW3 1)
+        set(HAVE_OPENGL 1)
+    endif()
 
     if (APPLE)
         target_link_libraries(ms-gui PRIVATE "-framework CoreFoundation" "-framework Cocoa" "-framework IOKit" "-framework CoreVideo")
@@ -300,3 +308,40 @@ get_target_property(ms_gui_sources ms-gui SOURCES)
 message(STATUS "ms-gui sources: ${ms_gui_sources}")
 
 message(STATUS "CMAKE_CURRENT_BINARY_DIR: ${CMAKE_CURRENT_BINARY_DIR}")
+
+if (EMSCRIPTEN)
+
+# Use Emscripten’s GLFW + WebGL2
+  target_link_options(ms-gui PRIVATE
+    -sUSE_GLFW=3
+    -sUSE_WEBGL2=1
+    -sMIN_WEBGL_VERSION=2
+    -sMAX_WEBGL_VERSION=2
+    -sALLOW_MEMORY_GROWTH=1
+  )
+
+  # Force Dear ImGui backends into this target
+  target_sources(ms-gui PRIVATE
+    ${PROJECT_SOURCE_DIR}/ms-gui-app/app/application/source/imgui_impl_glfw.cpp
+    ${PROJECT_SOURCE_DIR}/ms-gui-app/app/application/source/imgui_impl_opengl3.cpp
+    ${PROJECT_SOURCE_DIR}/ms-gui-app/app/application/source/imgui_impl_opengl3_loader.h
+  )
+
+  # Tell ImGui renderer to use GLES3 headers (no gl3w)
+  target_compile_definitions(ms-gui PRIVATE
+    IMGUI_IMPL_OPENGL_ES3=1
+    IMGUI_IMPL_OPENGL_LOADER_CUSTOM="GLES3/gl3.h"
+  )
+
+  # Don’t compile desktop-only platform/renderers for the web
+  set_source_files_properties(
+    ${PROJECT_SOURCE_DIR}/ms-gui-app/app/application/source/platform_win32.cpp
+    ${PROJECT_SOURCE_DIR}/ms-gui-app/app/application/source/renderer_dx11.cpp
+    PROPERTIES HEADER_FILE_ONLY TRUE
+  )
+
+  target_link_options(ms-gui PRIVATE
+    "SHELL:--preload-file=${CMAKE_SOURCE_DIR}/assets@/assets"
+    "SHELL:--preload-file=${CMAKE_SOURCE_DIR}/ms-gui-app/data@/ms-gui-app/data"
+  )
+  endif() 
