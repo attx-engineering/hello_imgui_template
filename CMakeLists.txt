@@ -343,5 +343,7 @@ if (EMSCRIPTEN)
   target_link_options(ms-gui PRIVATE
     "SHELL:--preload-file=${CMAKE_SOURCE_DIR}/assets@/assets"
     "SHELL:--preload-file=${CMAKE_SOURCE_DIR}/ms-gui-app/data@/ms-gui-app/data"
+    "SHELL:--preload-file=${CMAKE_SOURCE_DIR}/ms-gui-app/app@/ms-gui-app/app"
+    
   )
   endif() 
